@@ -645,10 +645,10 @@ NSTimeInterval const kAFUploadStream3GSuggestedDelay = 0.2;
 @end
 
 @interface AFMultipartBodyStream : NSInputStream <NSStreamDelegate>
-@property (nonatomic, assign) NSUInteger numberOfBytesInPacket;
-@property (nonatomic, assign) NSTimeInterval delay;
-@property (nonatomic, strong) NSInputStream *inputStream;
-@property (readonly, nonatomic, assign) unsigned long long contentLength;
+@property (nonatomic, assign) NSUInteger numberOfBytesInPacket;//包大小
+@property (nonatomic, assign) NSTimeInterval delay;//延时
+@property (nonatomic, strong) NSInputStream *inputStream;//输入流
+@property (readonly, nonatomic, assign) unsigned long long contentLength;//内容大小
 @property (readonly, nonatomic, assign, getter = isEmpty) BOOL empty;
 
 - (instancetype)initWithStringEncoding:(NSStringEncoding)encoding;
@@ -822,7 +822,7 @@ NSTimeInterval const kAFUploadStream3GSuggestedDelay = 0.2;
     self.bodyStream.delay = delay;
 }
 
-- (NSMutableURLRequest *)requestByFinalizingMultipartFormData {
+- (NSMutableURLRequest *)currentHTTPBodyPart {
     if ([self.bodyStream isEmpty]) {
         return self.request;
     }
@@ -905,7 +905,7 @@ NSTimeInterval const kAFUploadStream3GSuggestedDelay = 0.2;
     }
 
     NSInteger totalNumberOfBytesRead = 0;
-
+    //循环读取数据，以流的方式上传给服务器
     while ((NSUInteger)totalNumberOfBytesRead < MIN(length, self.numberOfBytesInPacket)) {
         if (!self.currentHTTPBodyPart || ![self.currentHTTPBodyPart hasBytesAvailable]) {
             if (!(self.currentHTTPBodyPart = [self.HTTPBodyPartEnumerator nextObject])) {
@@ -913,6 +913,7 @@ NSTimeInterval const kAFUploadStream3GSuggestedDelay = 0.2;
             }
         } else {
             NSUInteger maxLength = MIN(length, self.numberOfBytesInPacket) - (NSUInteger)totalNumberOfBytesRead;
+            //以totalNumberOfBytesRead来标记读到哪里了
             NSInteger numberOfBytesRead = [self.currentHTTPBodyPart read:&buffer[totalNumberOfBytesRead] maxLength:maxLength];
             if (numberOfBytesRead == -1) {
                 self.streamError = self.currentHTTPBodyPart.inputStream.streamError;
@@ -1085,15 +1086,15 @@ typedef enum {
 
 - (unsigned long long)contentLength {
     unsigned long long length = 0;
-
+    //判断初始边界有无
     NSData *encapsulationBoundaryData = [([self hasInitialBoundary] ? AFMultipartFormInitialBoundary(self.boundary) : AFMultipartFormEncapsulationBoundary(self.boundary)) dataUsingEncoding:self.stringEncoding];
     length += [encapsulationBoundaryData length];
-
+    //头
     NSData *headersData = [[self stringForHeaders] dataUsingEncoding:self.stringEncoding];
     length += [headersData length];
 
     length += _bodyContentLength;
-
+    //结束边界
     NSData *closingBoundaryData = ([self hasFinalBoundary] ? [AFMultipartFormFinalBoundary(self.boundary) dataUsingEncoding:self.stringEncoding] : [NSData data]);
     length += [closingBoundaryData length];
 
@@ -1121,6 +1122,7 @@ typedef enum {
     }
 }
 
+//是否还有流可以读取,应该循环调用
 - (NSInteger)read:(uint8_t *)buffer
         maxLength:(NSUInteger)length
 {
@@ -1138,7 +1140,7 @@ typedef enum {
 
     if (_phase == AFBodyPhase) {
         NSInteger numberOfBytesRead = 0;
-
+        //
         numberOfBytesRead = [self.inputStream read:&buffer[totalNumberOfBytesRead] maxLength:(length - (NSUInteger)totalNumberOfBytesRead)];
         if (numberOfBytesRead == -1) {
             return -1;
@@ -1159,12 +1161,13 @@ typedef enum {
     return totalNumberOfBytesRead;
 }
 
+
 - (NSInteger)readData:(NSData *)data
            intoBuffer:(uint8_t *)buffer
-            maxLength:(NSUInteger)length
+            maxLength:(NSUInteger)length//设置读取流的最大length
 {
     NSRange range = NSMakeRange((NSUInteger)_phaseReadOffset, MIN([data length] - ((NSUInteger)_phaseReadOffset), length));
-    [data getBytes:buffer range:range];
+    [data getBytes:buffer range:range];//copy data的range of bytes给指定的buffer
 
     _phaseReadOffset += range.length;
 
@@ -1176,7 +1179,7 @@ typedef enum {
 }
 
 - (BOOL)transitionToNextPhase {
-    //主线程执行？
+    //为什么要在主线程执行？
     if (![[NSThread currentThread] isMainThread]) {
         dispatch_sync(dispatch_get_main_queue(), ^{
             [self transitionToNextPhase];
