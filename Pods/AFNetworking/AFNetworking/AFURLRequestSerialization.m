@@ -613,6 +613,7 @@ static inline NSString * AFMultipartFormFinalBoundary(NSString *boundary) {
     return [NSString stringWithFormat:@"%@--%@--%@", kAFMultipartFormCRLF, boundary, kAFMultipartFormCRLF];
 }
 
+//内联函数根据后缀名返回content—type
 static inline NSString * AFContentTypeForPathExtension(NSString *extension) {
     NSString *UTI = (__bridge_transfer NSString *)UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, (__bridge CFStringRef)extension, NULL);
     NSString *contentType = (__bridge_transfer NSString *)UTTypeCopyPreferredTagWithClass((__bridge CFStringRef)UTI, kUTTagClassMIMEType);
@@ -692,6 +693,7 @@ NSTimeInterval const kAFUploadStream3GSuggestedDelay = 0.2;
                          name:(NSString *)name
                         error:(NSError * __autoreleasing *)error
 {
+    //抛出异常宏
     NSParameterAssert(fileURL);
     NSParameterAssert(name);
 

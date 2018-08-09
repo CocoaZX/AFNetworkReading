@@ -105,6 +105,7 @@ typedef NS_ENUM(NSUInteger, AFHTTPRequestQueryStringSerializationStyle) {
 
  @see NSMutableURLRequest -setAllowsCellularAccess:
  */
+//使用蜂窝网络标记
 @property (nonatomic, assign) BOOL allowsCellularAccess;
 
 /**
@@ -112,6 +113,7 @@ typedef NS_ENUM(NSUInteger, AFHTTPRequestQueryStringSerializationStyle) {
 
  @see NSMutableURLRequest -setCachePolicy:
  */
+//缓存策略
 @property (nonatomic, assign) NSURLRequestCachePolicy cachePolicy;
 
 /**
@@ -119,6 +121,7 @@ typedef NS_ENUM(NSUInteger, AFHTTPRequestQueryStringSerializationStyle) {
 
  @see NSMutableURLRequest -setHTTPShouldHandleCookies:
  */
+/*在HTTP连接中，一般都是一个请求对应一个连接，每次简历tcp连接是需要一定时间的。管线化，允许一次发送一组请求而不必等到相应。但由于目前并不是所有的服务器都支持这项功能，因此这个属性默认是不开启的。管线化使用同一tcp连接完成任务，因此能够大大提交请求的时间。但是响应要和请求的顺序 保持一致才行。使用场景也有，比如说首页要发送很多请求，可以考虑这种技术。但前提是建立连接成功后才可以使用。*/
 @property (nonatomic, assign) BOOL HTTPShouldHandleCookies;
 
 /**
@@ -133,6 +136,7 @@ typedef NS_ENUM(NSUInteger, AFHTTPRequestQueryStringSerializationStyle) {
 
  @see NSMutableURLRequest -setNetworkServiceType:
  */
+//细化链接类型，作用未体现
 @property (nonatomic, assign) NSURLRequestNetworkServiceType networkServiceType;
 
 /**
@@ -159,6 +163,7 @@ typedef NS_ENUM(NSUInteger, AFHTTPRequestQueryStringSerializationStyle) {
 /**
  Creates and returns a serializer with default configuration.
  */
+//配置默认实例
 + (instancetype)serializer;
 
 /**
@@ -216,6 +221,7 @@ forHTTPHeaderField:(NSString *)field;
 
  @param block A block that defines a process of encoding parameters into a query string. This block returns the query string and takes three arguments: the request, the parameters to encode, and the error that occurred when attempting to encode parameters for the given request.
  */
+//自定义编码
 - (void)setQueryStringSerializationWithBlock:(nullable NSString * (^)(NSURLRequest *request, id parameters, NSError * __autoreleasing *error))block;
 
 ///-------------------------------
