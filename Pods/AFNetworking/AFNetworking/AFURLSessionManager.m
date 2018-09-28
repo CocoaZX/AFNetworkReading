@@ -137,7 +137,7 @@ typedef void (^AFURLSessionTaskCompletionHandler)(NSURLResponse *response, id re
     _downloadProgress = [[NSProgress alloc] initWithParent:nil userInfo:nil];
     
     __weak __typeof__(task) weakTask = task;
-    for (NSProgress *progress in @[ _uploadProgress, _downloadProgress ])
+    for (NSProgress *progress in @[_uploadProgress,_downloadProgress])
     {
         progress.totalUnitCount = NSURLSessionTransferSizeUnknown;
         progress.cancellable = YES;
